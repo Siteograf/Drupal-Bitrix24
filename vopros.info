@@ -1,0 +1,6 @@
+name = Vopros
+description = "Форма отправки вопроса. Создает ноду Заявка, отправляет данные в CRM Bitrix24"
+package = Custom
+core = 7.x
+files[] = vopros.module
+version = "7.x-1.0-dev"

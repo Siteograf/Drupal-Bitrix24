@@ -1,0 +1,218 @@
+<?php
+function vopros_init()
+{
+    // drupal_add_css('/'. drupal_get_path('module', 'vopros') . "/vopros.css", array('type' => 'external'));
+    // drupal_add_js('/'. drupal_get_path('module','callbackme')."/callbackme.js", array('type' => 'external'));
+}
+
+
+function vopros_block_info()
+{
+    $blocks['vopros_form'] = array(
+        'info' => t('Форма вопроса'),
+        'ststus' => TRUE,
+    );
+    return $blocks;
+}
+
+function vopros_block_view($delta = '')
+{
+    switch ($delta) {
+        case 'vopros_form':
+            $block['subject'] = 'Задайте вопрос специалисту';
+            $block['content'] = drupal_get_form('formavoprosa');
+            return $block;
+            break;
+    }
+}
+
+
+function formavoprosa($form, &$form_state)
+{
+
+    $form['row'] = array(
+        '#type' => 'container',
+        '#attributes' => array(
+            'class' => array('row'),
+        ),
+    );
+
+
+    $form['row']['fio'] = array(
+        '#title' => "Ваше имя",
+        '#type' => 'textfield',
+        '#required' => TRUE,
+        '#weight' => 1,
+
+        '#prefix' => '<div class="col-md-4">',
+        '#suffix' => '</div>'
+    );
+
+
+    $form['row']['telefony'] = array(
+        '#title' => "Номер телефона",
+        // '#description' => 'Напишите свой телефон (можно несколько через запятую), по которым с вами можно будет связаться в Москве и МО',
+        '#type' => 'textfield',
+        '#required' => TRUE,
+        '#weight' => 2,
+
+        '#prefix' => '<div class="col-md-4">',
+        '#suffix' => '</div>'
+
+    );
+
+    $form['row']['email'] = array(
+        '#title' => "E-mail (если есть)",
+        // '#description' => 'Напишите несколько телефонов (через запятую), по которым с вами можно будет связаться в Украине, Молдове, России',
+        '#type' => 'textfield',
+        '#required' => FALSE,
+        '#weight' => 5,
+
+        '#prefix' => '<div class="col-md-4">',
+        '#suffix' => '</div>'
+    );
+
+    $form['row']['vopros_comments'] = array(
+        '#title' => 'Вопрос',
+        '#description' => "Напишите подробно ваш вопрос. Чем больше данных вы укажите, тем точнее будет ответ.",
+        '#type' => 'textarea',
+        '#rows' => 2,
+        '#weight' => 6,
+
+        '#prefix' => '<div class="col-md-12">',
+        '#suffix' => '</div>'
+    );
+
+    $form['row']['submit'] = array(
+        '#type' => 'submit',
+        '#value' => t('Задать вопрос'),
+        '#weight' => 100,
+
+        '#prefix' => '<div class="col-md-12">',
+        '#suffix' => '</div>',
+
+        '#attributes' => array(
+            'class' => array(
+                'btn btn-success btn-large',
+            ),
+        ),
+
+
+    );
+    return $form;
+}
+
+function formavoprosa_validate($form, &$form_state)
+{
+    $mail = $form_state['values']['email'];
+    if (!empty($mail)) {
+        if (!valid_email_address($mail)) {
+            form_set_error('email', 'Введите корректный адрес вашей электронной почты');
+        }
+    }
+}
+
+function formavoprosa_submit($form, &$form_state)
+{
+    $node = new StdClass();
+    $node->type = 'zayavka';
+    $node->status = 0;
+    $node->language = 'und';
+    $node->uid = 1;
+
+    $node->title = "CRM " . $form_state['values']['fio'];
+    $node->field_telefony[$node->language][0]['value'] = $form_state['values']['telefony'];
+    $node->field_e_mail['und'][0]['email'] = $form_state['values']['email'];
+    $node->field_voptos_comment[$node->language][0]['value'] = $form_state['values']['vopros_comments'];
+
+    node_save($node);
+    drupal_set_message(t('Ваш вопрос отправлен успешно'));
+
+    // $form_state['redirect'] = 'zayavka-ok';
+
+    $val_fio = $form_state['values']['fio'];
+    $val_telefony = $form_state['values']['telefony'];
+    $val_email = $form_state['values']['email'];
+    $val_vopros = $form_state['values']['vopros_comments'];
+
+    formavoprosa_to_CRM($val_fio, $val_telefony, $val_email, $val_vopros);
+
+}
+
+/********************************************************************************************/
+
+function formavoprosa_to_CRM($val_fio, $val_telefony, $val_email, $val_vopros)
+{
+
+// CRM server conection data
+// Берем данные для подключения к CRM из настроек сайта
+    $fastorder_crm_host = variable_get('fastorder_crm_host');
+    $fastorder_crm_login = variable_get('fastorder_crm_login');
+    $fastorder_crm_password = variable_get('fastorder_crm_password');
+    // $fastorder_crm_sousrceid = variable_get('fastorder_crm_sousrceid');
+    // OR you can send special authorization hash which is sent by server after first successful connection with login and password
+    //define('CRM_AUTH', 'e54ec19f0c5f092ea11145b80f465e1a'); // authorization hash
+
+    $fastorder_crm_port = '443';
+    $fastorder_crm_path = '/crm/configs/import/lead.php';
+
+
+    // get lead data from the form
+    $postData = array(
+        'TITLE' => $val_fio . " — (Вопрос)",
+        'NAME' => $val_fio,
+        'PHONE_WORK' => $val_telefony,
+        'EMAIL_WORK' => $val_email,
+        'COMMENTS' => $val_vopros,
+        'SOURCE_ID' => 15, // Сайт.Вопрос
+        'SOURCE_DESCRIPTION' => $_SERVER['HTTP_HOST'] . "\n" . date("d.m.Y H:i") /*. "\n" . $_SERVER['HTTP_REFERER'] . fastorder_get_refer()*/,
+        //'COMPANY_TITLE' => $leadData['COMPANY_TITLE'],
+        //'LAST_NAME' => $leadData['LAST_NAME'],
+        //'COMMENTS' => $leadData['COMMENTS'],
+    );
+
+    // append authorization data
+    if (defined('CRM_AUTH')) {
+        $postData['AUTH'] = CRM_AUTH;
+    } else {
+        $postData['LOGIN'] = $fastorder_crm_login;
+        $postData['PASSWORD'] = $fastorder_crm_password;
+    }
+
+    // open socket to CRM
+    $fp = fsockopen("ssl://" . $fastorder_crm_host, $fastorder_crm_port, $errno, $errstr, 30);
+    if ($fp) {
+        // prepare POST data
+        $strPostData = '';
+        foreach ($postData as $key => $value)
+            $strPostData .= ($strPostData == '' ? '' : '&') . $key . '=' . urlencode($value);
+
+        // prepare POST headers
+        $str = "POST " . $fastorder_crm_path . " HTTP/1.0\r\n";
+        $str .= "Host: " . $fastorder_crm_host . "\r\n";
+        $str .= "Content-Type: application/x-www-form-urlencoded\r\n";
+        $str .= "Content-Length: " . strlen($strPostData) . "\r\n";
+        $str .= "Connection: close\r\n\r\n";
+
+        $str .= $strPostData;
+
+        // send POST to CRM
+        fwrite($fp, $str);
+
+        // get CRM headers
+        $result = '';
+        while (!feof($fp)) {
+            $result .= fgets($fp, 128);
+        }
+        fclose($fp);
+
+        // cut response headers
+        //$response = explode("\r\n\r\n", $result);
+        // drupal_set_message(t('<pre>'.print_r($response[1], 1).'</pre>'));
+
+    } else {
+        // drupal_set_message(t('Connection Failed! '.$errstr.' ('.$errno.')'));
+        // echo 'Connection Failed! '.$errstr.' ('.$errno.')';
+    }
+
+}
