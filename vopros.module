@@ -33,7 +33,7 @@ function formavoprosa($form, &$form_state)
     $form['row'] = array(
         '#type' => 'container',
         '#attributes' => array(
-            'class' => array('row'),
+            'class' => array('row labelHidden'),
         ),
     );
 
@@ -44,6 +44,10 @@ function formavoprosa($form, &$form_state)
         '#required' => TRUE,
         '#weight' => 1,
 
+        '#attributes' => array(
+            'placeholder' => 'Ваше имя',
+        ),
+
         '#prefix' => '<div class="col-md-4">',
         '#suffix' => '</div>'
     );
@@ -51,10 +55,13 @@ function formavoprosa($form, &$form_state)
 
     $form['row']['telefony'] = array(
         '#title' => "Номер телефона",
-        // '#description' => 'Напишите свой телефон (можно несколько через запятую), по которым с вами можно будет связаться в Москве и МО',
         '#type' => 'textfield',
         '#required' => TRUE,
         '#weight' => 2,
+
+        '#attributes' => array(
+            'placeholder' => 'Номер телефона',
+        ),
 
         '#prefix' => '<div class="col-md-4">',
         '#suffix' => '</div>'
@@ -63,10 +70,13 @@ function formavoprosa($form, &$form_state)
 
     $form['row']['email'] = array(
         '#title' => "E-mail (если есть)",
-        // '#description' => 'Напишите несколько телефонов (через запятую), по которым с вами можно будет связаться в Украине, Молдове, России',
         '#type' => 'textfield',
         '#required' => FALSE,
         '#weight' => 5,
+
+        '#attributes' => array(
+            'placeholder' => 'E-mail (если есть)'
+        ),
 
         '#prefix' => '<div class="col-md-4">',
         '#suffix' => '</div>'
@@ -79,7 +89,11 @@ function formavoprosa($form, &$form_state)
         '#rows' => 2,
         '#weight' => 6,
 
-        '#prefix' => '<div class="col-md-12">',
+        '#attributes' => array(
+            'placeholder' => 'Вопрос'
+        ),
+
+        '#prefix' => '<div class="col-md-12 mt2rem">',
         '#suffix' => '</div>'
     );
 
@@ -88,12 +102,12 @@ function formavoprosa($form, &$form_state)
         '#value' => t('Задать вопрос'),
         '#weight' => 100,
 
-        '#prefix' => '<div class="col-md-12">',
+        '#prefix' => '<div class="col-md-12 mt2rem">',
         '#suffix' => '</div>',
 
         '#attributes' => array(
             'class' => array(
-                'btn btn-success btn-large',
+                'btn btn-success btn-lg',
             ),
         ),
 

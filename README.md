@@ -1,10 +1,13 @@
-# Drupal-Bitrix24
+# Drupal Bitrix24
 
 You should edit this module for you tasks.
+I used in form Bootstrap 4 classes.
+
+![Drupal Bitrix24 ](/screenShot.png)
 
 ### Russian description
 Выкладываю его в качестве примера.
-Модуль создает форму и отпраляет данные в Bitrix24 и там создается лид.
+Модуль создает блок с формой и отпраляет данные в Bitrix24 и там создается лид.
 
 Настройки принимает с полей. В модулей они не задаются
 
@@ -61,6 +64,21 @@ function fastorder_form_alter(&$form, &$form_state, $form_id)
 
     $form['#submit'][] = 'fastorder_system_site_information_settings_form_submit';
 }
+```
+
+### CSS
+В полях есть placeholder. Можно дописать себе так
+
+```css
+.labelHidden label {
+    display: none;
+}
+```
+или убрать плейсхолдеры:
+```php
+'#attributes' => array(
+    'placeholder' => 'Ваше имя',
+),
 ```
 
 Если этот модуль актуален пишите на info@siteograf.com помогу с адаптацией
